@@ -1,0 +1,11 @@
+_ > nanoagent.plugin.v0001.ProductConfig:
+tagline: "Spot every rule a portfolio breaks"
+summary: "Pick a fixed investor profile and a proposed allocation, and the agent lists every constraint the allocation violates: position cap, sector cap, cash floor, allowed tickers, negative weights and weights that do not add up to 1. A program decides what is right."
+highlights:
+  - "Six constraint rules with exact limits; a weight equal to its limit is allowed"
+  - "Edge cases built in: exactly at the limits, weights that do not sum to 1, an all-cash portfolio"
+  - "Missed violations and false alarms are reported separately"
+steps:
+  - "Choose a case: main, at-limits, sum-error or all-cash"
+  - "The agent reads the profile, the holdings and the exact sector totals"
+  - "It lists the violations and the verdict names any it missed or invented"

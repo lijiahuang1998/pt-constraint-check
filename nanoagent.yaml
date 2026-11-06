@@ -1,0 +1,36 @@
+_ > nanoagent.plugin.v0001.ManifestConfig:
+id: pt-constraint-check
+name: Constraint Check
+version: 0.1.0
+status: ready
+spec: nanoagent.plugin/v0001
+
+runtime > nanoagent.plugin.v0001.RuntimeConfig:
+  type: mcp_stdio
+  command: [uv, run, --frozen, python, -m, plugin]
+
+permissions > nanoagent.plugin.v0001.PermissionsConfig:
+  network > nanoagent.plugin.v0001.NetworkConfig:
+    hosts: []
+  filesystem > nanoagent.plugin.v0001.FilesystemConfig:
+    write: [workspace]
+
+# One entry per contract.Tool; its input and output classes are contract.TOOLS's.
+tools > dict[contract.Tool, nanoagent.plugin.v0001.ToolConfig]:
+  get_allocation:
+    description: Read a fixed investor profile and proposed allocation (main, at-limits, sum-error or all-cash) with the exact total weight of every held sector and of the whole portfolio
+  pin_violations:
+    description: Pin the task's answer key, the exact list of constraint violations the rules give for the case, out of the model's sight
+
+# One entry per contract.Task; its input class is contract.TASKS's.
+tasks > dict[contract.Task, nanoagent.plugin.v0001.TaskConfig]:
+  check-constraints:
+    description: List every investor constraint that a proposed allocation breaks, each with its rule and subject, and say whether the allocation is compliant
+    runner: agent
+    tools: [get_allocation]
+    reference: pin_violations
+    instructions: |-
+      Rules. There are six rules. max-position: a holding's weight is above profile.max_position (subject: its ticker). max-sector: a sector's total weight is above profile.max_sector (subject: the sector). min-cash: cash is below profile.min_cash (subject: CASH). disallowed-ticker: a held ticker is not in profile.allowed_tickers (subject: its ticker). negative-weight: a holding's weight is below 0 (subject: its ticker). weights-sum: total_weight differs from 1 by more than 0.000001 (subject: PORTFOLIO).
+      Limits. A value exactly equal to its limit is never a violation: 0.25 is fine against a limit of 0.25. Compare the numbers exactly as given; sector_totals and total_weight are exact, never recompute or round them.
+      Plan. Exactly two steps: (1) call get_allocation once, with the task input copied exactly as given; (2) submit.
+      Reporting. List one violation per broken rule and subject, with no duplicates. One holding can break several rules (for example max-position and disallowed-ticker). compliant is true only when the list is empty. Submit case (copied from the task), compliant and violations; use [] when nothing is broken.
